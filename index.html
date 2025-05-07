@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rastreador de Gastos Personales</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl font-bold">Rastreador de Gastos Personales</h1>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-6">
+        <!-- Sección de información general -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Ingresar Salario</h2>
+                <div class="mb-4">
+                    <label for="salary" class="block mb-2 font-medium">Salario Quincenal:</label>
+                    <input type="number" id="salary" placeholder="Ingresa tu salario quincenal" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+                <button id="saveSalary" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors">Guardar</button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Ingresar Gasto</h2>
+                <div class="mb-4">
+                    <label for="expenseName" class="block mb-2 font-medium">Descripción:</label>
+                    <input type="text" id="expenseName" placeholder="Nombre del gasto" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="expenseAmount" class="block mb-2 font-medium">Monto:</label>
+                    <input type="number" id="expenseAmount" placeholder="Monto del gasto" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="expenseDate" class="block mb-2 font-medium">Fecha:</label>
+                    <input type="date" id="expenseDate" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+                <div class="mb-4">
+                    <label for="expenseCategory" class="block mb-2 font-medium">Categoría:</label>
+                    <select id="expenseCategory" class="w-full p-2 border border-gray-300 rounded">
+                        <option value="Alimentos">Alimentos</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Vivienda">Vivienda</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Entretenimiento">Entretenimiento</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="expensePeriod" class="block mb-2 font-medium">Período:</label>
+                    <select id="expensePeriod" class="w-full p-2 border border-gray-300 rounded">
+                        <option value="Primera Quincena">Primera Quincena</option>
+                        <option value="Segunda Quincena">Segunda Quincena</option>
+                    </select>
+                </div>
+                <button id="addExpense" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition-colors">Agregar Gasto</button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Resumen</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-600 text-white p-4 rounded text-center">
+                        <p class="text-sm">Salario Quincenal</p>
+                        <p id="summaryIncome" class="text-2xl font-bold my-2">$0.00</p>
+                    </div>
+                    <div class="bg-red-500 text-white p-4 rounded text-center">
+                        <p class="text-sm">Gastos Totales</p>
+                        <p id="summaryExpenses" class="text-2xl font-bold my-2">$0.00</p>
+                    </div>
+                    <div class="bg-green-500 text-white p-4 rounded text-center">
+                        <p class="text-sm">Balance 1ra Quincena</p>
+                        <p id="summaryBalanceFirst" class="text-2xl font-bold my-2">$0.00</p>
+                    </div>
+                    <div class="bg-green-500 text-white p-4 rounded text-center">
+                        <p class="text-sm">Balance 2da Quincena</p>
+                        <p id="summaryBalanceSecond" class="text-2xl font-bold my-2">$0.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestañas para gráficos y listas -->
+        <div class="mb-6">
+            <div class="flex border-b border-gray-200">
+                <button id="tabCharts" class="py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-medium">Gráficos</button>
+                <button id="tabExpenses" class="py-2 px-4 text-gray-600 hover:text-blue-600">Lista de Gastos</button>
+            </div>
+            
+            <div id="chartsContent" class="mt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Gastos por Categoría</h3>
+                        <div class="h-64">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Gastos por Quincena</h3>
+                        <div class="h-64">
+                            <canvas id="periodChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="expensesContent" class="mt-6 hidden">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="flex border-b border-gray-200">
+                        <button id="firstHalfTab" class="py-2 px-4 text-blue-600 border-b-2 border-blue-600 font-medium">Primera Quincena</button>
+                        <button id="secondHalfTab" class="py-2 px-4 text-gray-600 hover:text-blue-600">Segunda Quincena</button>
+                    </div>
+                    
+                    <div id="firstHalfContent">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold mb-2">Gastos Primera Quincena</h3>
+                            <div id="firstHalfExpensesList" class="max-h-96 overflow-y-auto">
+                                <!-- Lista de gastos primera quincena -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="secondHalfContent" class="hidden">
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold mb-2">Gastos Segunda Quincena</h3>
+                            <div id="secondHalfExpensesList" class="max-h-96 overflow-y-auto">
+                                <!-- Lista de gastos segunda quincena -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let salary = 0;
+        let expenses = [];
+        let categoryChart = null;
+        let periodChart = null;
+
+        // Formatear cantidades como moneda
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+        }
+
+        // Guardar datos en localStorage
+        function saveData() {
+            localStorage.setItem('salary', salary);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        // Cargar datos desde localStorage
+        function loadData() {
+            const savedSalary = localStorage.getItem('salary');
+            const savedExpenses = localStorage.getItem('expenses');
+            
+            if (savedSalary) {
+                salary = parseFloat(savedSalary);
+                document.getElementById('salary').value = salary;
+            }
+            
+            if (savedExpenses) {
+                expenses = JSON.parse(savedExpenses);
+            }
+            
+            updateSummary();
+            updateExpensesLists();
+            updateCharts();
+        }
+
+        // Actualizar resumen
+        function updateSummary() {
+            // Calcular totales
+            const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const firstHalfExpenses = expenses
+                .filter(expense => expense.period === 'Primera Quincena')
+                .reduce((sum, expense) => sum + expense.amount, 0);
+            const secondHalfExpenses = expenses
+                .filter(expense => expense.period === 'Segunda Quincena')
+                .reduce((sum, expense) => sum + expense.amount, 0);
+            
+            // Actualizar elementos HTML
+            document.getElementById('summaryIncome').textContent = formatCurrency(salary);
+            document.getElementById('summaryExpenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('summaryBalanceFirst').textContent = formatCurrency(salary - firstHalfExpenses);
+            document.getElementById('summaryBalanceSecond').textContent = formatCurrency(salary - secondHalfExpenses);
+        }
+
+        // Actualizar listas de gastos
+        function updateExpensesLists() {
+            const firstHalfList = document.getElementById('firstHalfExpensesList');
+            const secondHalfList = document.getElementById('secondHalfExpensesList');
+            
+            // Limpiar listas
+            firstHalfList.innerHTML = '';
+            secondHalfList.innerHTML = '';
+            
+            // Filtrar gastos por quincena
+            const firstHalfExpenses = expenses.filter(expense => expense.period === 'Primera Quincena');
+            const secondHalfExpenses = expenses.filter(expense => expense.period === 'Segunda Quincena');
+            
+            // Función para crear elemento de gasto
+            function createExpenseElement(expense, index) {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center py-2 border-b border-gray-200';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-medium">${expense.name}</p>
+                        <p class="text-sm text-gray-600">${expense.date} - <span class="bg-blue-600 text-white text-xs px-2 py-1 rounded">${expense.category}</span></p>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="font-medium mr-4">${formatCurrency(expense.amount)}</span>
+                        <button class="deleteExpense bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600" data-index="${index}">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+                return div;
+            }
+            
+            // Añadir gastos a las listas
+            firstHalfExpenses.forEach((expense, index) => {
+                firstHalfList.appendChild(createExpenseElement(expense, index));
+            });
+            
+            secondHalfExpenses.forEach((expense, index) => {
+                secondHalfList.appendChild(createExpenseElement(expense, expenses.indexOf(expense)));
+            });
+            
+            // Mensaje si no hay gastos
+            if (firstHalfExpenses.length === 0) {
+                firstHalfList.innerHTML = '<p class="text-gray-500 py-2">No hay gastos registrados en esta quincena.</p>';
+            }
+            
+            if (secondHalfExpenses.length === 0) {
+                secondHalfList.innerHTML = '<p class="text-gray-500 py-2">No hay gastos registrados en esta quincena.</p>';
+            }
+            
+            // Eventos para botones de eliminar
+            document.querySelectorAll('.deleteExpense').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    expenses.splice(index, 1);
+                    saveData();
+                    updateExpensesLists();
+                    updateSummary();
+                    updateCharts();
+                });
+            });
+        }
+
+        // Actualizar gráficos
+        function updateCharts() {
+            // Datos para gráficos
+            const categories = {};
+            const periods = {
+                'Primera Quincena': 0,
+                'Segunda Quincena': 0
+            };
+            
+            // Calcular totales por categoría y período
+            expenses.forEach(expense => {
+                // Categorías
+                if (!categories[expense.category]) {
+                    categories[expense.category] = 0;
+                }
+                categories[expense.category] += expense.amount;
+                
+                // Períodos
+                periods[expense.period] += expense.amount;
+            });
+            
+            // Gráfico de categorías
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+            
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: [
+                            '#4361ee', '#3a0ca3', '#f72585', '#4cc9f0',
+                            '#560bad', '#7209b7', '#b5179e', '#f15bb5'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de períodos
+            const periodCtx = document.getElementById('periodChart').getContext('2d');
+            if (periodChart) periodChart.destroy();
+            
+            periodChart = new Chart(periodCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(periods),
+                    datasets: [{
+                        label: 'Gastos',
+                        data: Object.values(periods),
+                        backgroundColor: ['#4361ee', '#f72585']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Eventos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar datos al iniciar
+            loadData();
+            
+            // Guardar salario
+            document.getElementById('saveSalary').addEventListener('click', function() {
+                const salaryInput = document.getElementById('salary');
+                salary = parseFloat(salaryInput.value) || 0;
+                saveData();
+                updateSummary();
+                alert('Salario guardado correctamente');
+            });
+            
+            // Agregar gasto
+            document.getElementById('addExpense').addEventListener('click', function() {
+                const name = document.getElementById('expenseName').value.trim();
+                const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+                const date = document.getElementById('expenseDate').value;
+                const category = document.getElementById('expenseCategory').value;
+                const period = document.getElementById('expensePeriod').value;
+                
+                if (!name || amount <= 0 || !date) {
+                    alert('Por favor completa todos los campos correctamente');
+                    return;
+                }
+                
+                expenses.push({
+                    name,
+                    amount,
+                    date,
+                    category,
+                    period
+                });
+                
+                // Limpiar formulario
+                document.getElementById('expenseName').value = '';
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseDate').value = '';
+                
+                saveData();
+                updateSummary();
+                updateExpensesLists();
+                updateCharts();
+                
+                alert('Gasto agregado correctamente');
+            });
+            
+            // Cambiar entre pestañas principales
+            document.getElementById('tabCharts').addEventListener('click', function() {
+                document.getElementById('chartsContent').classList.remove('hidden');
+                document.getElementById('expensesContent').classList.add('hidden');
+                this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                document.getElementById('tabExpenses').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            document.getElementById('tabExpenses').addEventListener('click', function() {
+                document.getElementById('chartsContent').classList.add('hidden');
+                document.getElementById('expensesContent').classList.remove('hidden');
+                this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                document.getElementById('tabCharts').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            // Cambiar entre pestañas de quincenas
+            document.getElementById('firstHalfTab').addEventListener('click', function() {
+                document.getElementById('firstHalfContent').classList.remove('hidden');
+                document.getElementById('secondHalfContent').classList.add('hidden');
+                this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                document.getElementById('secondHalfTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+            
+            document.getElementById('secondHalfTab').addEventListener('click', function() {
+                document.getElementById('firstHalfContent').classList.add('hidden');
+                document.getElementById('secondHalfContent').classList.remove('hidden');
+                this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+                document.getElementById('firstHalfTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            });
+        });
+    </script>
+</body>
+</html>
